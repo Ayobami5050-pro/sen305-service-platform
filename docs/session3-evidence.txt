@@ -1,0 +1,62 @@
+10 objects imported automatically (use -v 2 for details).
+
+--- K1 filters
+open: [<ServiceRequest: Intermittent power in Lab 2 (Open)>, <ServiceRequest: Broken laboratory socket (Open)>]
+priority<=2: 2
+electrical: 2
+power search: 2
+--- K2 relationships
+electrical requests: 2
+technician work orders: 2
+item technician: technician1
+--- K3 update
+status now: assigned
+--- K4 aggregates
+[{'name': 'Electrical', 'request_count': 2}, {'name': 'ICT Support', 'request_count': 0}]
+[{'status': 'assigned', 'total': 1}, {'status': 'open', 'total': 1}]
+--- K5 SQL and explain
+SELECT `requests_app_servicerequest`.`id`, `requests_app_servicerequest`.`requester_id`, `requests_app_servicerequest`.`category_id`, `requests_app_servicerequest`.`title`, `requests_app_servicerequest`.`description`, `requests_app_servicerequest`.`location`, `requests_app_servicerequest`.`priority`, `requests_app_servicerequest`.`status`, `requests_app_servicerequest`.`resolved_at`, `requests_app_servicerequest`.`created_at`, `requests_app_servicerequest`.`updated_at`, `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined`, `requests_app_category`.`id`, `requests_app_category`.`name`, `requests_app_category`.`description`, `requests_app_category`.`is_active`, `requests_app_category`.`created_at` FROM `requests_app_servicerequest` INNER JOIN `auth_user` ON (`requests_app_servicerequest`.`requester_id` = `auth_user`.`id`) INNER JOIN `requests_app_category` ON (`requests_app_servicerequest`.`category_id` = `requests_app_category`.`id`) WHERE `requests_app_servicerequest`.`status` = assigned ORDER BY `requests_app_servicerequest`.`created_at` DESC
+-> Nested loop inner join  (cost=1.05 rows=1)
+    -> Nested loop inner join  (cost=0.7 rows=1)
+        -> Sort row IDs: requests_app_servicerequest.created_at DESC  (cost=0.35 rows=1)
+            -> Index lookup on requests_app_servicerequest using requests_app_servicerequest_status_01cb29e5 (status='assigned')  (cost=0.35 rows=1)
+        -> Single-row index lookup on auth_user using PRIMARY (id=requests_app_servicerequest.requester_id)  (cost=0.35 rows=1)
+    -> Single-row index lookup on requests_app_category using PRIMARY (id=requests_app_servicerequest.category_id)  (cost=0.35 rows=1)
+
+--- worksheet counts
+all: 2
+open: 1
+assigned: 1
+10 objects imported automatically (use -v 2 for details).
+
+--- Test 1 duplicate category
+IntegrityError (1062, "Duplicate entry 'Electrical' for key 'requests_app_category.name'")
+--- Test 2 priority 9
+IntegrityError (3819, "Check constraint 'request_priority_between_1_and_5' is violated.")
+row exists: False
+--- Test 3 full_clean priority 0
+ValidationError: {'priority': ['Ensure this value is greater than or equal to 1.']}
+--- Test 4 protected delete
+ProtectedError 2
+--- Test 5 second work order
+IntegrityError (1062, "Duplicate entry '5fb8a745ae2d41c5a8636de58662397b' for key 'requests_app_workorder.service_request_id'")
+10 objects imported automatically (use -v 2 for details).
+
+--- Task 1 due dates
+due before +1 day: [<ServiceRequest: Due soon request (Open)>]
+--- Task 3 synthetic data
+total requests: 16
+SELECT `requests_app_servicerequest`.`id`, `requests_app_servicerequest`.`requester_id`, `requests_app_servicerequest`.`category_id`, `requests_app_servicerequest`.`title`, `requests_app_servicerequest`.`description`, `requests_app_servicerequest`.`location`, `requests_app_servicerequest`.`priority`, `requests_app_servicerequest`.`status`, `requests_app_servicerequest`.`resolved_at`, `requests_app_servicerequest`.`due_at`, `requests_app_servicerequest`.`resolution_summary`, `requests_app_servicerequest`.`created_at`, `requests_app_servicerequest`.`updated_at` FROM `requests_app_servicerequest` WHERE (`requests_app_servicerequest`.`category_id` = 1 AND `requests_app_servicerequest`.`status` IN (open, assigned)) ORDER BY `requests_app_servicerequest`.`priority` ASC, `requests_app_servicerequest`.`created_at` ASC
+-> Sort row IDs: requests_app_servicerequest.priority, requests_app_servicerequest.created_at  (cost=3.21 rows=6)
+    -> Index range scan on requests_app_servicerequest using req_cat_status_idx over (category_id = 1 AND status = 'assigned') OR (category_id = 1 AND status = 'open'), with index condition: ((requests_app_servicerequest.category_id = 1) and (requests_app_servicerequest.`status` in ('open','assigned')))  (cost=3.21 rows=6)
+
+10 objects imported automatically (use -v 2 for details).
+
+--- Task 1 due dates
+due before +1 day: [<ServiceRequest: Due soon request (Open)>]
+--- Task 3 synthetic data
+total requests: 16
+SELECT `requests_app_servicerequest`.`id`, `requests_app_servicerequest`.`requester_id`, `requests_app_servicerequest`.`category_id`, `requests_app_servicerequest`.`title`, `requests_app_servicerequest`.`description`, `requests_app_servicerequest`.`location`, `requests_app_servicerequest`.`priority`, `requests_app_servicerequest`.`status`, `requests_app_servicerequest`.`resolved_at`, `requests_app_servicerequest`.`due_at`, `requests_app_servicerequest`.`resolution_summary`, `requests_app_servicerequest`.`created_at`, `requests_app_servicerequest`.`updated_at` FROM `requests_app_servicerequest` WHERE (`requests_app_servicerequest`.`category_id` = 1 AND `requests_app_servicerequest`.`status` IN (open, assigned)) ORDER BY `requests_app_servicerequest`.`priority` ASC, `requests_app_servicerequest`.`created_at` ASC
+-> Sort row IDs: requests_app_servicerequest.priority, requests_app_servicerequest.created_at  (cost=3.21 rows=6)
+    -> Index range scan on requests_app_servicerequest using req_cat_status_idx over (category_id = 1 AND status = 'assigned') OR (category_id = 1 AND status = 'open'), with index condition: ((requests_app_servicerequest.category_id = 1) and (requests_app_servicerequest.`status` in ('open','assigned')))  (cost=3.21 rows=6)
+
